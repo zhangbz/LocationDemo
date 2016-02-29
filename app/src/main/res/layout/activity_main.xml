@@ -13,8 +13,13 @@
         android:id="@+id/bt_location_surface_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="点击进入地图"
+        android:text="绘制轨迹测试"
         android:layout_centerInParent="true"/>
 
-
+    <Button
+        android:id="@+id/bt_step_counter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/bt_location_surface_view"
+        android:text="计步测试"/>
 </RelativeLayout>

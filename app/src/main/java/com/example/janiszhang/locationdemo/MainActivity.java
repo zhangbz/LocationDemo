@@ -9,6 +9,7 @@ import android.widget.Button;
 public class MainActivity extends AppCompatActivity {
 
     private Button mLocationSurfaceViewButton;
+    private Button mStepCounterButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,7 +20,16 @@ public class MainActivity extends AppCompatActivity {
         mLocationSurfaceViewButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,LocationSurfaceViewActivity.class));
+                startActivity(new Intent(MainActivity.this, LocationSurfaceViewActivity.class));
+                finish();
+            }
+        });
+
+        mStepCounterButton = (Button) findViewById(R.id.bt_step_counter);
+        mStepCounterButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, StepCounterActivity.class));
                 finish();
             }
         });
