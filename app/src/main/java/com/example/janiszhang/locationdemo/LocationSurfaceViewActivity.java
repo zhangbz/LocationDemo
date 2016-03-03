@@ -64,10 +64,14 @@ public class LocationSurfaceViewActivity extends Activity {
         }
 
 //        @Override
+        int i = 0;
         protected void onDraw(/*Canvas canvas*/) {
 //            super.onDraw(canvas);
             mCanvas.drawColor(Color.WHITE);//?
-            mCanvas.drawPath(mPath, mPaint);
+            i++;
+            if(i% 10== 0) {
+                mCanvas.drawPath(mPath, mPaint);
+            }
             mCanvas.drawText("当前触笔X: " + mPosX, 0, 20, mTextPaint);
             mCanvas.drawText("当前触笔Y: " + mPosY , 0, 40, mTextPaint);
         }

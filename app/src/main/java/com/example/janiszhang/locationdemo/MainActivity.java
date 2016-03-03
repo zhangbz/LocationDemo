@@ -10,6 +10,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button mLocationSurfaceViewButton;
     private Button mStepCounterButton;
+    private Button mTrajectory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +31,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, StepCounterActivity.class));
+                finish();
+            }
+        });
+
+        mTrajectory = (Button) findViewById(R.id.bt_trajectory);
+        mTrajectory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this,TrajectoryActivity.class));
                 finish();
             }
         });

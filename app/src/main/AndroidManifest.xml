@@ -18,6 +18,7 @@
         <activity android:name=".LocationSurfaceViewActivity"/>
 
         <activity android:name=".StepCounterActivity"/>
+        <activity android:name=".TrajectoryActivity"/>
     </application>
 
 </manifest>
