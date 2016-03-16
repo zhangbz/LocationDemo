@@ -25,10 +25,18 @@
         android:layout_centerInParent="true"/>
 
     <Button
-        android:id="@+id/bt_trajectory"
+        android:id="@+id/bt_orientation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/bt_step_counter"
+        android:text="方向判断"
+        android:layout_centerInParent="true"/>
+
+    <Button
+        android:id="@+id/bt_trajectory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/bt_orientation"
         android:text="trajectory"
         android:layout_centerInParent="true"/>
 </RelativeLayout>

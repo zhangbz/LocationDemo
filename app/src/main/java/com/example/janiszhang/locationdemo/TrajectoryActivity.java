@@ -49,8 +49,9 @@ public class TrajectoryActivity extends Activity{
         private float x = 0, y = 0, z = 0;
         float[] accelerometerValues = new float[3];
         float[] mValues = new float[3];
-        float  mStepLongth = 20;
+        float  mStepLongth = 20 * 3;
         boolean first = true;
+        private Paint mTextPaint;
 
         public MySurfaceView(Context context) {
             super(context);
@@ -68,9 +69,14 @@ public class TrajectoryActivity extends Activity{
             mPaint.setAntiAlias(true);//抗锯齿
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeCap(Paint.Cap.ROUND);
-            mPaint.setStrokeWidth(6);
+            mPaint.setStrokeWidth(6);//6
             mPath = new Path();
-            mPath.moveTo((int)arc_x,(int)arc_y);
+            mPath.moveTo((int) arc_x, (int) arc_y);
+
+
+            mTextPaint = new Paint();
+            mTextPaint.setColor(Color.BLACK);
+            mTextPaint.setTextSize(60);
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
@@ -95,14 +101,21 @@ public class TrajectoryActivity extends Activity{
                                 + oriValues[1] * oriValues[1] + oriValues[2] * oriValues[2]);
                     } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
                         magneticValues = event.values.clone();
-                    }
-                    float[] R = new float[9];
+                        float[] R = new float[9];
 //                    float[] values = new float[3];
 
-                    //get R 一个长度为9的float数组,包换旋转矩阵的数组
-                    SensorManager.getRotationMatrix(R, null, accelerometerValues, magneticValues);
-                    //get values 长度为3,zxy的旋转弧度
-                    SensorManager.getOrientation(R, mValues);
+                        //get R 一个长度为9的float数组,包换旋转矩阵的数组
+                        SensorManager.getRotationMatrix(R, null, accelerometerValues, magneticValues);
+                        SensorManager.getOrientation(R, mValues);
+                        Log.i("zhangbz", "orientationVals[0] = " + mValues[0] + " orientationVals[1] = " + mValues[1] + " orientationVals[2] = " + mValues[2]  + gravityNew + " : " +(float) Math.toDegrees(mValues[0]));
+                        //get values 长度为3,zxy的旋转弧度
+//                       float[] mRotationMatrix = new float[9];
+//                       SensorManager.remapCoordinateSystem(R,  SensorManager.AXIS_X, SensorManager.AXIS_Z, mRotationMatrix);
+//                        float[] mValues2 = new float[3];
+//                        SensorManager.getOrientation(R, mValues2);
+//                        Log.i("zhangbz", "orientationVals22222222[0] = " + mValues2[0] + " orientationVals[1] = " + mValues2[1] + " orientationVals[2] = " + mValues2[2]  + gravityNew + " : " +(float) Math.toDegrees(mValues2[0]));
+                    }
+
 //            Log.d("Mainactivity", "value[0] is " + Math.toDegrees(values[0]));//转换成角度
                     //降级算出的旋转角度取反,用于旋转指南针背景图
 //                    float rotateDegree = - (float) Math.toDegrees(values[0]);
@@ -112,8 +125,8 @@ public class TrajectoryActivity extends Activity{
 //                        compassImg.startAnimation(animation);
 //                        lastRotateDegree = rotateDegree;
 //                    }
-
-                    DetectorNewStep(gravityNew);
+                    Log.i("zhangbz", "调用DetectorNewStep之前的值 : " + gravityNew + " : " +(float) Math.toDegrees(mValues[0]));
+                    DetectorNewStep(gravityNew, (int) Math.toDegrees(mValues[0]));
                 }
                 @Override
                 public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -148,7 +161,7 @@ public class TrajectoryActivity extends Activity{
 
         @Override
         public void run() {
-            while(true){
+//            while(true){
 
                 synchronized (mSurfaceHolder) {
                     mCanvas =mSurfaceHolder.lockCanvas();
@@ -158,10 +171,12 @@ public class TrajectoryActivity extends Activity{
                     }
                     mCanvas.drawColor(Color.WHITE);
                     mCanvas.drawPath(mPath, mPaint);
+                    mCanvas.drawText("当前的方向 : " + Math.toDegrees(mValues[0]), 0, 20, mTextPaint);
+                    mCanvas.drawText("方向变化的角度 : " + orientation , 0, 40, mTextPaint);
 //                    DetectorNewStep(gravityNew);
                     mSurfaceHolder.unlockCanvasAndPost(mCanvas);
                 }
-            }
+//            }
         }
 
         /**************************************************/
@@ -198,6 +213,11 @@ public class TrajectoryActivity extends Activity{
         //初始阈值
         float ThreadValue = (float) 2.0;
     /*private StepListener mStepListeners;*/
+
+
+        //上次的方向值
+        int orientationOld = 0;
+        int orientation = 0;
         /**************************************************/
 
     /*
@@ -206,11 +226,13 @@ public class TrajectoryActivity extends Activity{
  * 2.如果检测到了波峰，并且符合时间差以及阈值的条件，则判定为1步
  * 3.符合时间差条件，波峰波谷差值大于initialValue，则将该差值纳入阈值的计算中
  * */
-        public void DetectorNewStep(float values) {
+        public void DetectorNewStep(float values, final int orientationValue) {
             if (gravityOld == 0) {
                 gravityOld = values;
+                orientationOld = orientationValue;
             } else {
                 if (DetectorPeak(values, gravityOld)) {
+
                     timeOfLastPeak = timeOfThisPeak;
                     timeOfNow = System.currentTimeMillis();
                     if (timeOfNow - timeOfLastPeak >= 250
@@ -223,52 +245,151 @@ public class TrajectoryActivity extends Activity{
 					 * 2.例如记录的9步用户停住超过3秒，则前面的记录失效，下次从头开始
 					 * 3.连续记录了9步用户还在运动，之前的数据才有效
 					 * */
+//                        double xtemp = mStepLongth * 2;
+//                        double ytemp = 0;
+//
+//                        mPath.quadTo((float) (arc_x + xtemp), (float) (arc_y + ytemp), (float) arc_x, (float) arc_y);
+////                      mCanvas.drawPath(mPath, mPaint);
+//                        arc_x = arc_x + xtemp;
+//                        arc_y = arc_y + ytemp;
+
+
 
                         double xtemp = 0;
                         double ytemp = 0;
-                        if(mValues[0]>=0&& mValues[0]<90) {
-                                float temp = 90 - mValues[0];
-                                xtemp = Math.cos(temp)*mStepLongth;
-                                ytemp = Math.sin(temp)* mStepLongth;
+                        int orientationTemp = (int) (Math.toDegrees(mValues[0]));
+
+                        orientation = orientationTemp  - orientationOld;
+                        Log.i("zhangbz2", "orientationOld = " + orientationOld + " ; orientationTemp = " + " : " + orientationTemp + " ; orientiation = " + orientation);
+
+//                        if(Math.abs(orientation) > 5) {
+                            if(orientation>=0&& orientation<90) {
+//                                float temp = 90 - mValues[0];
+                                if(orientation< 10) {
+                                    orientation = 0;
+                                } else if (orientation>= 10 &&orientation < 30){
+                                    orientation = 20;
+                                } else if (orientation>= 30 && orientation < 50) {
+                                    orientation = 40;
+                                } else if (orientation >= 50 && orientation < 70) {
+                                    orientation = 60;
+                                } else if(orientation >= 70 && orientation< 90) {
+                                    orientation = 80;
+                                }
+                                xtemp = Math.sin(orientation)*mStepLongth;
+                                ytemp = Math.cos(orientation)* mStepLongth;
 //                            mCanvas.drawColor(Color.WHITE);
-                                mPath.quadTo((float) (arc_x + xtemp), (float) (arc_y + ytemp), (float) arc_x, (float) arc_y);
+                                mPath.lineTo((float) (arc_x + xtemp), (float) (arc_y - ytemp));
 //                            mCanvas.drawPath(mPath, mPaint);
                                 arc_x = arc_x + xtemp;
-                                arc_y = arc_y + ytemp;
-                        } else if (mValues[0]>= 90 && mValues[0]<= 180) {
-                            float temp = 180 -mValues[0];
-                            xtemp = Math.cos(temp) * mStepLongth;
-                            ytemp = Math.sin(temp) * mStepLongth;
+                                arc_y = arc_y - ytemp;
+                            }
+                            else if (orientation>= 90 && orientation<= 180) {
+                                if(orientation>= 90 &&orientation< 110) {
+                                    orientation = 100;
+                                } else if (orientation>= 110 &&orientation < 130){
+                                    orientation = 120;
+                                } else if (orientation>= 130 && orientation < 150) {
+                                    orientation = 140;
+                                } else if (orientation >= 150 && orientation < 170) {
+                                    orientation = 160;
+                                } else if(orientation >= 170 && orientation<= 180) {
+                                    orientation = 180;
+                                }
+                                float temp = 180 - orientation;
+                                xtemp = Math.cos(temp) * mStepLongth;
+                                ytemp = Math.sin(temp) * mStepLongth;
 //                            mCanvas.drawColor(Color.WHITE);
-                            mPath.quadTo((float) (arc_x + xtemp), (float) (arc_y - ytemp), (float) arc_x, (float) arc_y);
+//                            mPath.quadTo((float) (arc_x + xtemp), (float) (arc_y + ytemp), (float) arc_x, (float) arc_y);
+                                mPath.lineTo((float) (arc_x + xtemp), (float) (arc_y + ytemp));
 //                            mCanvas.drawPath(mPath, mPaint);
-                            arc_x = arc_x +xtemp;
-                            arc_y = arc_y -ytemp;
-                        } else if (mValues[0]<0&& mValues[0]>= -90) {
-                            float temp = 90 -Math.abs(mValues[0]);
-                            xtemp = Math.cos(temp) * mStepLongth;
-                            ytemp = Math.sin(temp) * mStepLongth;
+                                arc_x = arc_x +xtemp;
+                                arc_y = arc_y +ytemp;
+                            } else if (orientation<0&& orientation>= -90) {
+                                if(orientation>=-10&&orientation< 0) {
+                                    orientation = 0;
+                                } else if (orientation>= -30 &&orientation < -10){
+                                    orientation = -20;
+                                } else if (orientation>= -50 && orientation < -30) {
+                                    orientation = -40;
+                                } else if (orientation >= -70 && orientation < -50) {
+                                    orientation = -60;
+                                } else if(orientation >= -90 && orientation< -70) {
+                                    orientation = -80;
+                                }
+                                float temp = Math.abs(orientation);
+                                xtemp = Math.sin(temp) * mStepLongth;
+                                ytemp = Math.cos(temp) * mStepLongth;
 //                            mCanvas.drawColor(Color.WHITE);
-                            mPath.quadTo((float) (arc_x - xtemp), (float) (arc_y + ytemp), (float) arc_x, (float) arc_y);
+//                            mPath.quadTo((float) (arc_x - xtemp), (float) (arc_y - ytemp), (float) arc_x, (float) arc_y);
+                                mPath.lineTo((float) (arc_x - xtemp), (float) (arc_y - ytemp));
 //                            mCanvas.drawPath(mPath, mPaint);
-                            arc_x = arc_x -xtemp;
-                            arc_y = arc_y +ytemp;
-                        } else {
-                            float temp = 180 -Math.abs(mValues[0]);
-                            xtemp = Math.cos(temp) * mStepLongth;
-                            ytemp = Math.sin(temp) * mStepLongth;
+                                arc_x = arc_x -xtemp;
+                                arc_y = arc_y -ytemp;
+                            } else {
+                                if(orientation>=-110&&orientation< -90) {
+                                    orientation = -100;
+                                } else if (orientation>= -130 &&orientation < -110){
+                                    orientation = -120;
+                                } else if (orientation>= -150 && orientation < -130) {
+                                    orientation = -140;
+                                } else if (orientation >= -170 && orientation < -150) {
+                                    orientation = -160;
+                                } else if(orientation > -180 && orientation< -170) {
+                                    orientation = 180;
+                                }
+                                float temp = 180 -Math.abs(orientation);
+                                xtemp = Math.sin(temp) * mStepLongth;
+                                ytemp = Math.cos(temp) * mStepLongth;
 //                            mCanvas.drawColor(Color.WHITE);
-                            mPath.quadTo((float) (arc_x - xtemp), (float) (arc_y - ytemp), (float) arc_x, (float) arc_y);
+//                            mPath.quadTo((float) (arc_x - xtemp), (float) (arc_y + ytemp), (float) arc_x, (float) arc_y);
+                                mPath.lineTo((float) (arc_x - xtemp), (float) (arc_y + ytemp));
 //                            mCanvas.drawPath(mPath, mPaint);
-                            arc_x = arc_x - xtemp;
-                            arc_y = arc_y-ytemp;
-                        }
+                                arc_x = arc_x - xtemp;
+                                arc_y = arc_y+ytemp;
+                            }
+
+
+
+//                        } else {
+////                            xtemp = Math.cos(orientation)*mStepLongth;
+//                            ytemp = mStepLongth;
+////                            mCanvas.drawColor(Color.WHITE);
+//                            mPath.lineTo((float) arc_x, (float) (arc_y - ytemp));
+////                            mCanvas.drawPath(mPath, mPaint);
+////                            arc_x = arc_x - xtemp;
+//                            arc_y = arc_y - ytemp;
+//                        }
+
 //                        mCanvas.drawColor(Color.WHITE);//?
                         //mPath.quadTo(mPosX, mPosY, x, y);
 //                        mCanvas.drawPath(mPath, mPaint);
 
 //                    mStepListeners.onStep()
 //                    mStepCounterText.setText((step++) + "步");
+
+
+
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                synchronized (mSurfaceHolder) {
+                                    mCanvas =mSurfaceHolder.lockCanvas();
+                                    if(first) {
+                                        mPath.moveTo((int)arc_x,(int)arc_y);
+                                        first = false;
+                                    }
+                                    mCanvas.drawColor(Color.WHITE);
+                                    mCanvas.drawPath(mPath, mPaint);
+                                    mCanvas.drawText("上一步的方向 : " + orientationOld, 0, 50, mTextPaint);
+                                    mCanvas.drawText("当前的方向 : " + orientationValue, 0,100, mTextPaint);
+                                    mCanvas.drawText("方向变化的角度 : " + orientation , 0, 150, mTextPaint);
+//                    DetectorNewStep(gravityNew);
+                                    mSurfaceHolder.unlockCanvasAndPost(mCanvas);
+                                }
+                            }
+                        }).start();
+//                        orientationOld = (int)orientationValue;
                     }
                     if (timeOfNow - timeOfLastPeak >= 250
                             && (peakOfWave - valleyOfWave >= initialValue)) {
@@ -278,6 +399,7 @@ public class TrajectoryActivity extends Activity{
                 }
             }
             gravityOld = values;
+//            orientationOld = orientationValue;
         }
 
         /*

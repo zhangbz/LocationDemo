@@ -12,6 +12,8 @@ public class MainActivity extends AppCompatActivity {
     private Button mStepCounterButton;
     private Button mTrajectory;
 
+    private Button mOrientation;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +43,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this,TrajectoryActivity.class));
                 finish();
+            }
+        });
+
+        mOrientation = (Button) findViewById(R.id.bt_orientation);
+        mOrientation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, OrientationActivity.class));
             }
         });
     }

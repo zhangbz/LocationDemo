@@ -19,6 +19,7 @@
 
         <activity android:name=".StepCounterActivity"/>
         <activity android:name=".TrajectoryActivity"/>
+        <activity android:name=".OrientationActivity"/>
     </application>
 
 </manifest>
