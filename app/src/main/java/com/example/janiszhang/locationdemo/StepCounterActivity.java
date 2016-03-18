@@ -18,11 +18,9 @@ import android.widget.TextView;
 public class StepCounterActivity extends Activity {
 
     private TextView mStepCounterText;
-    private Button mStartButton;
     private SensorManager mSensorManager;
 
     private int step = 0;
-    private boolean flag = false;
 
     /**************************************************/
     //存放三轴数据
@@ -66,20 +64,6 @@ public class StepCounterActivity extends Activity {
         setContentView(R.layout.activity_step_counter);
 
         mStepCounterText = (TextView) findViewById(R.id.tv_step_counter);
-//        mStartButton = (Button) findViewById(R.id.bt_start);
-//        mStartButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                if (flag) {
-//                    flag = false;
-//                    mStartButton.setText("开始");
-//                } else {
-//                    flag = true;
-//                    mStartButton.setText("停止");
-//                }
-//            }
-//        });
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -94,18 +78,21 @@ public class StepCounterActivity extends Activity {
         }
     }
 
+    /**
+     * 对三轴数据进行平方和开根号的处理
+     * 调用DetectorNewStep检测步子
+     */
     private SensorEventListener listener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            //while(flag) {
-                //计步
+
                 for (int i = 0; i < 3; i++) {
                     oriValues[i] = event.values[i];
                 }
                 gravityNew = (float) Math.sqrt(oriValues[0] * oriValues[0]
                         + oriValues[1] * oriValues[1] + oriValues[2] * oriValues[2]);
                 DetectorNewStep(gravityNew);
-             //}
+
         }
 
         @Override
@@ -113,22 +100,6 @@ public class StepCounterActivity extends Activity {
 
         }
     };
-
-
-    /*
-	 * 注册了G-Sensor后一只会调用这个函数
-	 * 对三轴数据进行平方和开根号的处理
-	 * 调用DetectorNewStep检测步子
-	 * */
-//    @Override
-//    public void onSensorChanged(SensorEvent event) {
-//        for (int i = 0; i < 3; i++) {
-//            oriValues[i] = event.values[i];
-//        }
-//        gravityNew = (float) Math.sqrt(oriValues[0] * oriValues[0]
-//                + oriValues[1] * oriValues[1] + oriValues[2] * oriValues[2]);
-//        DetectorNewStep(gravityNew);
-//    }
 
     /*
      * 检测步子，并开始计步
@@ -146,14 +117,6 @@ public class StepCounterActivity extends Activity {
                 if (timeOfNow - timeOfLastPeak >= 250
                         && (peakOfWave - valleyOfWave >= ThreadValue)) {
                     timeOfThisPeak = timeOfNow;
-					/*
-					 * 更新界面的处理，不涉及到算法
-					 * 一般在通知更新界面之前，增加下面处理，为了处理无效运动：
-					 * 1.连续记录10才开始计步
-					 * 2.例如记录的9步用户停住超过3秒，则前面的记录失效，下次从头开始
-					 * 3.连续记录了9步用户还在运动，之前的数据才有效
-					 * */
-//                    mStepListeners.onStep()
                     mStepCounterText.setText((step++) + "步");
                 }
                 if (timeOfNow - timeOfLastPeak >= 250
